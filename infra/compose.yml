@@ -1,0 +1,61 @@
+# TraceableMetrics · 双栈 compose（ADR-13 冻结项②④：volume 单轨挂载 + 网络双栈隔离）
+# 规则：
+#   - 卷：commerce 服务只挂 data/commerce，research 服务只挂 data/research。
+#   - 网（ADR-13 ④ / P1-01）：commerce/research 分处两个独立网络
+#     （traceable-commerce-net / traceable-research-net），两轨不得共享任何网络；
+#     跨轨通信唯一通道 = 导出桥 traceable-bridge-net（V1 无跨轨导出，仅预留声明，
+#     任何普通轨道服务接入 bridge 网 → CI R4 网络检查失败）。
+# 任何违规 → CI R4 静态扫描失败（tests/check_dependencies.py）。
+# 用法（V1.2+ 容器化阶段启用）：
+#   docker compose -f infra/compose.yml config
+#   docker compose -f infra/compose.yml up -d
+# 2026-09-02 运行时验收：tests/docker_isolation_acceptance.py DKR1-DKR6 6/6 PASS。
+# 实证包含实际 Mounts/Networks、双向对侧路径 FileNotFoundError、双向 DNS 不可达；
+# 两服务是常驻拓扑探针，模块导入失败时仍会退出并由 restart 策略显性重启。
+services:
+  commerce:
+    image: python:3.13-slim
+    container_name: traceable-commerce
+    working_dir: /app
+    volumes:
+      - ../core:/app/core
+      - ../plugins:/app/plugins
+      - ../schemas:/app/schemas
+      - ../data/commerce:/data/commerce
+    environment:
+      TRACEABLE_TRACK: commerce
+    command: >
+      sh -c "pip install -q duckdb pyyaml && python -c
+      \"import sys; sys.path.insert(0,'/app'); from plugins.commerce.run_v1 import main\" &&
+      exec sleep infinity"
+    networks:
+      - traceable-commerce-net
+    restart: unless-stopped
+
+  research:
+    image: python:3.13-slim
+    container_name: traceable-research
+    working_dir: /app
+    volumes:
+      - ../core:/app/core
+      - ../plugins:/app/plugins
+      - ../schemas:/app/schemas
+      - ../data/research:/data/research
+    environment:
+      TRACEABLE_TRACK: research
+    command: >
+      sh -c "pip install -q duckdb pyyaml && python -c
+      \"import sys; sys.path.insert(0,'/app'); import plugins.research\" &&
+      exec sleep infinity"
+    networks:
+      - traceable-research-net
+    restart: unless-stopped
+
+networks:
+  traceable-commerce-net:
+    driver: bridge
+  traceable-research-net:
+    driver: bridge
+  # 跨轨通信唯一通道（V1 无跨轨导出，预留；普通轨道服务接入即 R4 违规）
+  traceable-bridge-net:
+    driver: bridge

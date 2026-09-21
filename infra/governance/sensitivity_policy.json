@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "fields": {
+    "email": "confidential",
+    "phone": "confidential",
+    "mobile": "confidential",
+    "name": "confidential",
+    "address": "confidential",
+    "id_card": "restricted",
+    "身份证号": "restricted",
+    "bank_account": "restricted",
+    "api_token": "restricted",
+    "password": "restricted"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "contracts": [
+    {
+      "source": "commerce.orders",
+      "version": 2,
+      "effective_at": "2026-08-27T00:00:00Z",
+      "columns": [
+        {"name": "order_id", "type": "string", "nullable": false},
+        {"name": "created_at", "type": "datetime", "nullable": false},
+        {"name": "status", "type": "string", "nullable": false},
+        {"name": "amount_total", "type": "number", "nullable": true},
+        {"name": "amount_paid", "type": "number", "nullable": true}
+      ]
+    },
+    {
+      "source": "research.cohort",
+      "version": 1,
+      "effective_at": "2026-08-31T00:00:00Z",
+      "columns": [
+        {"name": "participant_id", "type": "string", "nullable": false},
+        {"name": "arm", "type": "string", "nullable": false},
+        {"name": "converted", "type": "integer", "nullable": false}
+      ]
+    }
+  ]
+}

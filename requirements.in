@@ -1,0 +1,4 @@
+# AutoData 运行时直接依赖（锁定文件由 uv pip compile 生成：requirements.lock.txt）
+duckdb>=1.5
+pyyaml>=6.0
+dbt-duckdb>=1.11

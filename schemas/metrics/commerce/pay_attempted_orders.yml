@@ -1,0 +1,10 @@
+metric: pay_attempted_orders
+description: 发起支付订单数（订单去重；演示数据无测试单，架构书样例的 test_order==false 过滤在含该标记的数据集上启用）
+type: count
+grain: order
+time_column: created_at
+filters: []
+queryable_dimensions: [channel, region]
+freshness_contract: { max_delay: PT30M }
+owners: [commerce-track]
+version: 1

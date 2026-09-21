@@ -1,0 +1,8 @@
+# TraceableMetrics dbt profiles —— 数据库路径经环境变量注入（core 不硬编码 /data/* 路径，C-4）
+traceable:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('TRACEABLE_DB_PATH') }}"
+      schema: main

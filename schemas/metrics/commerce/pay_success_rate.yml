@@ -1,0 +1,12 @@
+﻿metric: pay_success_rate
+description: 支付成功率 = 成功支付订单数 ÷ 发起支付订单数（订单去重）
+type: ratio
+numerator:   { metric: pay_success_orders }
+denominator: { metric: pay_attempted_orders }
+grain: order
+time_column: created_at
+filters: []                    # 口径在子指标内建（架构书样例 test_order==false 适用于含测试单标记的数据集）
+queryable_dimensions: [channel, region]
+freshness_contract: { max_delay: PT30M }
+owners: [commerce-track]
+version: 2

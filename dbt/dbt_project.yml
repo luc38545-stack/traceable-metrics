@@ -1,0 +1,14 @@
+# TraceableMetrics dbt 工程 —— 声明式建模（架构书 §04-L3「dbt 声明模型」共享实现）
+# 用法：由 core/modeling/dbt.py 经 dbtRunner 程序化调用；
+#       profiles 的数据库路径经 env_var('TRACEABLE_DB_PATH') 注入（track 参数化）。
+name: traceable
+version: "1.0.0"
+config-version: 2
+profile: traceable
+model-paths: ["models"]
+models:
+  traceable:
+    dwd_base:
+      materialized: table
+    dwd_cohort:
+      materialized: table

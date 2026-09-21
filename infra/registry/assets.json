@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "asset_id": "core.experiment.hashing",
+      "path": "core/experiment/hashing.py",
+      "kind": "module",
+      "scope": "shared",
+      "rationale": "受试者哈希域不依赖轨道语义、不承载数据流，必须由两轨共用。",
+      "questions": {
+        "depends_on_track_semantics": false,
+        "failure_contaminates_other_track": false,
+        "managed_data_flow": false
+      }
+    },
+    {
+      "asset_id": "core.statistics.diagnosis",
+      "path": "core/statistics/diagnosis.py",
+      "kind": "module",
+      "scope": "shared",
+      "rationale": "统计诊断措辞库是无轨语义能力，不直接读写受管数据。",
+      "questions": {
+        "depends_on_track_semantics": false,
+        "failure_contaminates_other_track": false,
+        "managed_data_flow": false
+      }
+    },
+    {
+      "asset_id": "plugins.commerce.ab_test",
+      "path": "plugins/commerce/ab_test.py",
+      "kind": "plugin",
+      "scope": "commerce",
+      "rationale": "A/B、SRM、peeking 与护栏均属于商用轨语义。",
+      "questions": {
+        "depends_on_track_semantics": true,
+        "failure_contaminates_other_track": false,
+        "managed_data_flow": true
+      }
+    },
+    {
+      "asset_id": "plugins.research.run_research",
+      "path": "plugins/research/run_research.py",
+      "kind": "plugin",
+      "scope": "research",
+      "rationale": "论文轨预注册、k 匿名、DP 与研究数据集门禁均属于论文轨。",
+      "questions": {
+        "depends_on_track_semantics": true,
+        "failure_contaminates_other_track": false,
+        "managed_data_flow": true
+      }
+    },
+    {
+      "asset_id": "dbt.models.dwd_base",
+      "path": "dbt/models/dwd_base.sql",
+      "kind": "model",
+      "scope": "commerce",
+      "rationale": "dwd_base 是商用轨声明式模型，不能被论文轨选择。",
+      "questions": {
+        "depends_on_track_semantics": true,
+        "failure_contaminates_other_track": false,
+        "managed_data_flow": true
+      }
+    },
+    {
+      "asset_id": "dbt.models.dwd_cohort",
+      "path": "dbt/models/dwd_cohort.sql",
+      "kind": "model",
+      "scope": "research",
+      "rationale": "dwd_cohort 是论文轨队列模型，必须与 dwd_base 保持轨道隔离。",
+      "questions": {
+        "depends_on_track_semantics": true,
+        "failure_contaminates_other_track": false,
+        "managed_data_flow": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+# TraceableMetrics · ADR-16 overlay.research.yml（论文轨差异）
+research:
+  port: 8766
+  k_anonymity_default: 5             # 论文轨默认 k 更严
+  dp_epsilon_default: 0.1

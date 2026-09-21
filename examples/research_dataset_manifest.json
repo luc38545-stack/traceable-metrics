@@ -1,0 +1,19 @@
+{
+  "dataset_name": "cohort-conversion-20260831",
+  "version": "1.0.0",
+  "owner": "research-lab",
+  "collection_method": "platform log extraction, de-identified at source",
+  "irb": {
+    "approved": true,
+    "expires_at": "2099-12-31",
+    "approval_no": "IRB-2026-0088"
+  },
+  "privacy": {
+    "quasi_identifiers": [
+      "city",
+      "age"
+    ],
+    "k": 2,
+    "dp_epsilon": 1.0
+  }
+}

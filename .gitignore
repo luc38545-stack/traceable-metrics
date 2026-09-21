@@ -1,0 +1,38 @@
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest*/
+.venv/
+venv/
+
+# Test and local scratch directories
+_ci_bt*/
+_review*/
+_test_tmp*/
+pytest_tmp*/
+traceable_probe_*/
+.r_face_tmp/
+
+# Runtime data and generated artifacts
+data/
+dbt/target/
+dbt/logs/
+tests/d12/screenshots/*.html
+
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+*.db
+*.duckdb
+
+# Editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,6 @@
+# AutoData 全量测试/CI 直接依赖（含运行时依赖）
+-r requirements.in
+pytest>=8.0
+numpy>=1.26
+scipy>=1.11
+statsmodels>=0.14

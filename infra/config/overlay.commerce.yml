@@ -1,0 +1,7 @@
+# TraceableMetrics · ADR-16 overlay.commerce.yml（商用轨差异）
+commerce:
+  port: 8765
+  default_metric: pay_success_rate
+# 允许轨差异示例：商用轨会话更长（人审不强制）
+app:
+  session_timeout_minutes: 30

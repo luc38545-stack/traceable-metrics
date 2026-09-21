@@ -1,0 +1,24 @@
+# TraceableMetrics · ADR-16 config overlay · base.yml（共享默认，双轨一致部分）
+# 规则：shared.* 是双轨共享密钥池——任一轨 overlay 以不同值覆盖 → 冲突拒绝。
+#       非 shared 允许轨差异（这正是 overlay 存在的意义）。
+shared:
+  audit_retention_days: 400          # D6 审计日志留存（天）
+  assertion_row_band: 0.40           # §08.1 L1 行数突变 ±40% 熔断带
+  llm_provider: omniroute            # Copilot Provider（宪.1 可换层）
+  bridge_ttl_minutes: 15             # 导出桥人审 token TTL（ADR-15）
+app:
+  host: 127.0.0.1                    # 只监听回环（P1-05）
+  csrf_enabled: true
+  session_timeout_minutes: 15        # face=A 15 分钟会话
+  upload_max_bytes: 10485760
+commerce:
+  port: 8765
+  track: commerce
+  default_metric: pay_success_rate
+research:
+  port: 8766
+  track: research
+  k_anonymity_default: 2
+admin:
+  port: 8767
+  track: admin

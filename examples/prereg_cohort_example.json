@@ -1,0 +1,23 @@
+{
+  "ledger": "preregistration",
+  "version": 1,
+  "records": {
+    "pre-cohort-20260831": {
+      "registered_at": "2026-08-31T05:24:14",
+      "plan_id": "pre-cohort-20260831",
+      "fingerprint": "76de512ae1874e849dbb35bbb51ad0aeea41645a7dcd719331a4ce9017594dd4",
+      "plan": {
+        "plan_id": "pre-cohort-20260831",
+        "hypothesis": "处理组转化率高于对照组",
+        "outcome": "binary",
+        "design": "rct",
+        "method": "two_proportion_test",
+        "alpha": 0.05,
+        "mde": 0.08,
+        "power": 0.8,
+        "primary_metric": "conversion_rate",
+        "epsilon": 1.0
+      }
+    }
+  }
+}
