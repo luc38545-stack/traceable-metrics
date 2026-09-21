@@ -99,10 +99,10 @@ def build_repro_package(
         prereg_meta = _copy_into(pkg_dir, "prereg", prereg_path)
         dataset_meta = _copy_into(pkg_dir, "dataset", manifest_path)
 
-        # requirements.txt 与代码指纹（D3 判据的一部分）
-        req_src = Path(__file__).resolve().parents[2] / "requirements.txt"
+        # requirements.lock.txt（运行时锁）与代码指纹（D3 判据的一部分）
+        req_src = Path(__file__).resolve().parents[2] / "requirements.lock.txt"
         if not req_src.exists():
-            raise ReproError("仓库缺少 requirements.txt——复现包无法锁定依赖")
+            raise ReproError("仓库缺少 requirements.lock.txt——复现包无法锁定依赖")
         req_meta = _copy_into(pkg_dir, ".", req_src)
         code_digest = build_digest()
         (pkg_dir / "code_digest.txt").write_text(code_digest + "\n", encoding="utf-8")

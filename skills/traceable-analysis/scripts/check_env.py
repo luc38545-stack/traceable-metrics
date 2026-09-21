@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 
 #: 本 Skill 支持的主项目版本（升级时同步修改 SKILL.md 顶部声明）
-PINNED_RELEASE = "traceable-v1.0.3"
+PINNED_RELEASE = "traceable-v1.0.4"
 #: 运行时依赖（与主项目 requirements.in 一致）
 RUNTIME_DEPS = ("duckdb", "yaml", "dbt")
 
@@ -135,8 +135,10 @@ def main(argv: list[str] | None = None) -> int:
         if vpy is None:
             ok_all &= _check(
                 "venv", False,
-                "主项目缺 .venv。请在主项目根目录执行："
-                "python -m venv .venv && pip install -r requirements.lock.txt", checks)
+                "主项目缺 .venv。请在主项目根目录执行：\n"
+                "  Windows: python -m venv .venv && .venv\\Scripts\\python.exe -m pip install -r requirements.lock.txt\n"
+                "  Linux/macOS: python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.lock.txt\n"
+                "（禁止裸 pip——会装进系统 Python，随后 .venv 依赖检查必然失败）", checks)
         else:
             _check("venv", True, str(vpy), checks)
             r = subprocess.run(

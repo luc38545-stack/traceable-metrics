@@ -1,5 +1,0 @@
-# Full test suite dependencies. Runtime users only need requirements.txt.
-pytest>=8.0
-numpy>=1.26
-scipy>=1.11
-statsmodels>=0.14

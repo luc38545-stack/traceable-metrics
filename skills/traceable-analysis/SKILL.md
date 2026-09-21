@@ -7,7 +7,7 @@ description: >
   经 D6 闸门验证的解释正文。依赖外部主项目 TraceableMetrics（固定版本，首次使用需安装）。
 ---
 
-# TraceableMetrics 可信分析（Skill v0.1.3 · 主项目固定版本 traceable-v1.0.3）
+# TraceableMetrics 可信分析（Skill v0.1.4 · 主项目固定版本 traceable-v1.0.4）
 
 把一份 CSV 走完「raw 落地 → 体检 → 断言闸门 → dbt 建模 → 指标查询 → 快照 →
 双写台账」的管道，然后由你（执行本 Skill 的 Agent）按 D6 铁律解读结果。
@@ -17,14 +17,15 @@ description: >
 
 ## 版本固定（硬规则）
 
-- 本 Skill 仅支持主项目 tag `traceable-v1.0.3` 及其声明的台账 schema。
+- 本 Skill 仅支持主项目 tag `traceable-v1.0.4` 及其声明的台账 schema。
 - 禁止引用任何本地预设路径（如某台开发机的盘符）。主项目位置只由
   `TRACEABLE_HOME` 环境变量或 `--traceable-home` 参数决定。
 - 主项目尚未就位时，引导用户执行：
 
 ```bash
-git clone https://github.com/luc38545-stack/traceable-metrics.git && cd traceable
-git checkout traceable-v1.0.3          # 必须固定到本 Skill 支持的 tag
+# 显式指定目录名 traceable，避免默认目录名与 cd 不一致
+git clone https://github.com/luc38545-stack/traceable-metrics.git traceable && cd traceable
+git checkout traceable-v1.0.4          # 必须固定到本 Skill 支持的 tag
 python -m venv .venv
 # 依赖必须装进 .venv：显式用 .venv 的 python -m pip，禁止裸 pip（会装进系统
 # Python，随后 check_env 检查 .venv 依赖时会失败）
@@ -119,7 +120,7 @@ source 三元组（run_id/snapshot_id/query_id）与台账逐项一致——
   --policy <主项目>/infra/governance/sensitivity_policy.json
 ```
 
-产出 。解释正文中禁止出现任何未过闸的原始字段值。
+产出脱敏副本 JSON（路径见 stdout 的 `out` 字段）。解释正文中禁止出现任何未过闸的原始字段值。
 
 交付物结构：
 

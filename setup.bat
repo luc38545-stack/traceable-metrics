@@ -23,7 +23,7 @@ if not defined PY (
   )
 )
 if not defined PY (
-  echo [安装失败] 未找到 Python 3。请从 https://www.python.org/downloads/ 安装 Python 3.10+，并勾选 Add Python to PATH。
+  echo [安装失败] 未找到 Python 3。请从 https://www.python.org/downloads/ 安装 Python 3.12+，并勾选 Add Python to PATH。
   pause
   exit /b 1
 )
@@ -36,14 +36,14 @@ if not exist "%~dp0.venv\Scripts\python.exe" (
   set "PY_ARGS="
 )
 
-echo [2/3] 安装运行依赖...
+echo [2/3] 安装运行依赖（锁定版本 requirements.lock.txt）...
 %PY% -m pip install --upgrade pip
 if errorlevel 1 goto :failed
-%PY% -m pip install -r requirements.txt
+%PY% -m pip install -r requirements.lock.txt
 if errorlevel 1 goto :failed
 
-echo [3/3] 安装测试依赖...
-if exist "%~dp0requirements-dev.txt" %PY% -m pip install -r requirements-dev.txt
+echo [3/3] 安装测试依赖（锁定版本 requirements-dev.lock.txt）...
+if exist "%~dp0requirements-dev.lock.txt" %PY% -m pip install -r requirements-dev.lock.txt
 if errorlevel 1 goto :failed
 
 echo.

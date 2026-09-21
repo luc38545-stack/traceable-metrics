@@ -18,7 +18,8 @@ traceable_probe_*/
 data/
 dbt/target/
 dbt/logs/
-tests/d12/screenshots/*.html
+dbt/.user.yml
+tests/d12/screenshots/
 
 # Local secrets and environment overrides
 .env

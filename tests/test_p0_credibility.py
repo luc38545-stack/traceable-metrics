@@ -400,7 +400,7 @@ def test_p006_provenance_helpers_are_honest():
     """代码版本 / 依赖锁 / 契约摘要三者齐备，dirty 判定不许伪装成 clean。"""
     assert len(ledger.build_digest()) == 64
     assert len(ledger.dependency_digest()) == 64
-    assert len(ledger.file_digest(ROOT / "requirements.txt")) == 64
+    assert len(ledger.file_digest(ROOT / "requirements.lock.txt")) == 64
     dirty = ledger.build_dirty()
     assert dirty in ("true", "false") or dirty.startswith("unknown"), dirty
 

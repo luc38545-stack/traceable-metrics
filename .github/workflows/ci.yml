@@ -1,0 +1,35 @@
+# TraceableMetrics 干净环境 CI
+#
+# 判定口径：GitHub Actions 的 Python 3.12 runner = 干净环境证据。
+# 步骤：装 dev 锁文件（运行锁的超集，含 duckdb/dbt-duckdb/pyyaml）
+#       → 架构门禁 + 运行门禁 + pytest 全量（跳过浏览器 E2E）。
+# 发布规则：CI 未在目标 commit 上通过前，不打 release tag。
+# 浏览器 E2E（playwright）不在 CI 范围——由带界面的环境按 README 验证，不做产品语义降级。
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install locked dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.lock.txt
+
+      - name: Architecture + runtime gates and full test suite
+        run: python ci_check.py --skip-browser

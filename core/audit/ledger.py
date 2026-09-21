@@ -28,43 +28,67 @@ REQUIRED_PROVENANCE = ("run_id", "snapshot_id", "batch_id", "commit_sha")
 LEDGER_SCHEMA_VERSION = 1
 
 
-@lru_cache(maxsize=1)
-def build_digest() -> str:
-    """不可变代码指纹（审计 #5）：仓库无 git，退而求其次对运行时源码树做整体 sha256。
+RUNTIME_LOCK = "requirements.lock.txt"
 
-    参与指纹：core/ plugins/ schemas/ infra/ + requirements.txt。
-    任何一处源码改动 → 指纹变化 → 老 run 的 provenance 无法冒充新代码版本
+
+def build_digest(root: Path | None = None) -> str:
+    """不可变代码指纹（审计 #5）：对运行时源码树做整体 sha256。
+
+    参与指纹：core/ plugins/ schemas/ infra/ dbt/ + requirements.lock.txt。
+    任何一处源码或依赖锁改动 → 指纹变化 → 老 run 的 provenance 无法冒充新代码版本
     （可复现性判据：snapshot × commit × run_id 三要素缺一不可）。
-    进程内缓存：一次运行多次落账取同一指纹。
+    缓存策略：仅对默认真实根（root=None）做进程级缓存；显式注入 root 时现算
+    （测试/审计场景要求每次读取反映当下文件状态）。
+    失败语义（发布契约 RC5）：任一指纹输入缺失或不可读 → 显式抛错，绝不静默跳过。
     """
-    root = Path(__file__).resolve().parents[2]
+    if root is None:
+        return _build_digest_real_root()
+    return _build_digest_tree(Path(root).resolve())
+
+
+@lru_cache(maxsize=1)
+def _build_digest_real_root() -> str:
+    return _build_digest_tree(Path(__file__).resolve().parents[2])
+
+
+def _build_digest_tree(root: Path) -> str:
     h = hashlib.sha256()
     parts: list[Path] = []
-    for sub in ("core", "plugins", "schemas", "infra"):
+    for sub in ("core", "plugins", "schemas", "infra", "dbt"):
         d = root / sub
         if d.exists():
             parts.extend(sorted(p for p in d.rglob("*") if p.is_file()))
-    req = root / "requirements.txt"
-    if req.exists():
-        parts.append(req)
+    req = root / RUNTIME_LOCK
+    if not req.exists():
+        raise FileNotFoundError(
+            f"代码指纹输入缺失：{req}——发布基线不完整，拒绝产出指纹")
+    parts.append(req)
     for p in parts:
         h.update(p.relative_to(root).as_posix().encode("utf-8"))
         h.update(b"\0")
         try:
             h.update(p.read_bytes())
-        except OSError:
-            continue
+        except OSError as e:
+            raise OSError(f"代码指纹读取失败：{p}") from e
         h.update(b"\0")
     return h.hexdigest()
 
 
+def dependency_digest(root: Path | None = None) -> str:
+    """P0-06：依赖锁摘要（requirements.lock.txt 指纹）。
+
+    发布契约 RC1/RC2：只认 runtime lock；缺锁文件显式抛错，不返回 None。
+    """
+    resolved = Path(root).resolve() if root else Path(__file__).resolve().parents[2]
+    return _dependency_digest_tree(resolved)
+
+
 @lru_cache(maxsize=1)
-def dependency_digest() -> str | None:
-    """P0-06：依赖锁摘要（requirements.txt 指纹），无依赖清单则 None。"""
-    root = Path(__file__).resolve().parents[2]
-    req = root / "requirements.txt"
+def _dependency_digest_tree(root: Path) -> str:
+    req = root / RUNTIME_LOCK
     if not req.exists():
-        return None
+        raise FileNotFoundError(
+            f"依赖锁缺失：{req}——台账依赖摘要拒绝降级到宽松清单")
     return hashlib.sha256(req.read_bytes()).hexdigest()
 
 
@@ -73,15 +97,16 @@ def file_digest(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def build_dirty() -> str:
+def build_dirty(root: Path | None = None) -> str:
     """P0-06：工作区是否有未提交修改。
 
     有 .git → 用 `git status --porcelain` 判定，dirty 时明确标记不可作正式复现产物；
+    git 判定不了（非零退出/超时/异常）→ 如实返回 unknown(...)，不伪装成 clean（发布契约 RC6）；
     无 .git（当前仓库形态）→ 如实返回 unknown，不伪装成 clean。
     """
     import subprocess
 
-    root = Path(__file__).resolve().parents[2]
+    root = Path(root).resolve() if root else Path(__file__).resolve().parents[2]
     if not (root / ".git").exists():
         return "unknown(no-git-repo)"
     try:
@@ -89,9 +114,11 @@ def build_dirty() -> str:
             ["git", "status", "--porcelain"], cwd=str(root),
             capture_output=True, text=True, timeout=10,
         )
-        return "true" if out.stdout.strip() else "false"
     except Exception:  # noqa: BLE001 — 判定不了就如实说 unknown，不猜
         return "unknown(git-unavailable)"
+    if out.returncode != 0:
+        return f"unknown(git-exit-{out.returncode})"
+    return "true" if out.stdout.strip() else "false"
 
 
 class LedgerError(ValueError):

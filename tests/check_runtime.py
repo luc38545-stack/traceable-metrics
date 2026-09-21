@@ -8,9 +8,9 @@
 
 检查项（P2-03 修改意见）：
   RT1 正确 Python 解释器（版本满足最低要求，能 import 关键包）
-  RT2 requirements.txt 全部可导入
+  RT2 requirements.lock.txt 全部可导入
   RT3 dbt CLI 可执行（dbt --version 能返回）
-  RT4 关键版本满足 requirements.txt 约束（duckdb>=1.5 / pyyaml>=6.0 / dbt-duckdb>=1.11）
+  RT4 关键版本满足 requirements.lock.txt 锁定（逐包 == 精确比对）
   RT5 启动器与 README 使用同一解释器（bat 主 PY == README 声明路径）
   RT6（提示）未检测到项目 .venv / 锁定环境 —— 建议运行 setup.bat 创建隔离环境
 
@@ -30,7 +30,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PROBLEMS: list[str] = []
 WARNINGS: list[str] = []
 
-MIN_PY = (3, 10)  # 发布包与 requirements 的最低支持版本
+MIN_PY = (3, 12)  # 发布基线：锁文件由 3.12 干净环境生成，低版本不承诺可用
 
 
 def rt1_interpreter() -> None:
@@ -47,12 +47,20 @@ def rt1_interpreter() -> None:
             PROBLEMS.append(f"RT1 cannot import {mod}: {e}")
 
 
-def _req_constraints() -> list[tuple[str, str, str]]:
-    """解析 requirements.txt 顶层约束，返回 [(name, op, version), ...]。"""
+def _norm(name: str) -> str:
+    """PEP 503 发行名规范化：大小写与 -/_/. 等价。"""
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def _lock_entries() -> list[tuple[str, str, str]]:
+    """解析 requirements.lock.txt 顶层锁定，返回 [(name, op, version), ...]。
+
+    只取 `name==version` 约束行；`# via` 注释与空行跳过。
+    """
     out = []
-    req = ROOT / "requirements.txt"
+    req = ROOT / "requirements.lock.txt"
     if not req.exists():
-        WARNINGS.append("RT2 requirements.txt 不存在，跳过依赖清单核对")
+        WARNINGS.append("RT2 requirements.lock.txt 不存在，跳过依赖清单核对")
         return out
     for line in req.read_text(encoding="utf-8-sig").splitlines():
         line = line.strip()
@@ -61,19 +69,15 @@ def _req_constraints() -> list[tuple[str, str, str]]:
         m = re.match(r"^([A-Za-z0-9_.\-]+)\s*(>=|==|<=|~=)\s*([0-9][0-9A-Za-z.+\-]*)$", line)
         if m:
             out.append((m.group(1), m.group(2), m.group(3)))
-        else:
-            out.append((line, "import-only", ""))
     return out
 
 
 def rt2_requirements() -> None:
-    """RT2 requirements.txt 逐条可导入。"""
-    for name, op, _ver in _req_constraints():
-        import_name = {"pyyaml": "yaml", "dbt-duckdb": "dbt"}.get(name.lower(), name)
-        try:
-            importlib.import_module(import_name)
-        except ImportError as e:
-            PROBLEMS.append(f"RT2 cannot import {name} (from requirements.txt): {e}")
+    """RT2 requirements.lock.txt 逐包已安装（元数据比对，不做 import——
+    锁文件含传递依赖，其发行名不等于 import 名，如 pydantic-core/typing-extensions）。"""
+    for name, _op, _ver in _lock_entries():
+        if _installed_version(name) is None:
+            PROBLEMS.append(f"RT2 not installed: {name} (from requirements.lock.txt)")
 
 
 def _ver_tuple(v: str) -> tuple:
@@ -130,16 +134,16 @@ def rt3_dbt_cli() -> None:
 
 
 def rt4_versions() -> None:
-    """RT4 已装版本满足 requirements.txt 约束。"""
-    for name, op, need in _req_constraints():
-        if op == "import-only" or op != ">=":
+    """RT4 已装版本满足 requirements.lock.txt 锁定（== 精确比对）。"""
+    for name, op, need in _lock_entries():
+        if op != "==":
             continue
         have = _installed_version(name)
         if have is None:
             continue  # 未安装 → RT2 已报
-        if _ver_tuple(have) < _ver_tuple(need):
+        if _ver_tuple(have) != _ver_tuple(need):
             PROBLEMS.append(
-                f"RT4 {name} 已装 {have} < 要求 {need}（requirements.txt {op}{need}）"
+                f"RT4 {name} 已装 {have} != 锁定 {need}（requirements.lock.txt）"
             )
 
 
